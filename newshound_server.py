@@ -264,22 +264,22 @@ def get_html():
   .slabel{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--rule);padding-bottom:4px;margin-bottom:7px}
   .hint{font-size:0.66rem;color:var(--muted);margin-top:4px;line-height:1.5}
 
-  /* category builder */
+  /* category builder: one field, multiple categories as chips */
   .cat-builder{display:flex;gap:5px}
   .cat-builder input{flex:1;background:var(--paper);border:1px solid var(--rule);padding:7px 9px;font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:var(--ink);outline:none;text-transform:uppercase}
   .cat-builder input::placeholder{text-transform:none}
   .cat-builder input:focus{border-color:var(--blue)}
   .cat-builder button{background:var(--blue);color:#fff;border:none;padding:7px 11px;font-family:'IBM Plex Mono',monospace;font-size:0.8rem;cursor:pointer;flex-shrink:0;transition:opacity .15s}
   .cat-builder button:hover{opacity:.85}
+  .cat-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;min-height:24px}
+  .cat-chips .chip{display:inline-flex;align-items:center;gap:4px;background:var(--blue);color:#fff;font-family:'IBM Plex Mono',monospace;font-size:0.68rem;padding:3px 8px 3px 10px;border-radius:2px;animation:pop .15s ease}
+  .cat-chips .chip button{background:none;border:none;color:rgba(255,255,255,.8);cursor:pointer;font-size:.9rem;line-height:1;padding:0}
+  .cat-chips .chip button:hover{color:#fff}
 
-  /* category cards */
-  .cat-list{display:flex;flex-direction:column;gap:7px}
-  .cat-card{background:var(--paper);border:1px solid var(--rule);padding:9px 11px}
-  .cat-card-hdr{display:flex;align-items:center;gap:7px;margin-bottom:7px}
-  .cat-lbl{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;font-weight:500;color:var(--blue);letter-spacing:.1em;text-transform:uppercase;flex:1}
-  .cat-rm{background:none;border:none;color:var(--rule);cursor:pointer;font-size:1rem;line-height:1;padding:0;transition:color .15s}
-  .cat-rm:hover{color:var(--accent)}
-  .kw-row{display:flex;gap:4px;margin-bottom:5px}
+  /* single shared keywords section */
+  .kw-section{background:var(--paper);border:1px solid var(--rule);padding:11px 13px;margin-top:12px}
+  .kw-section .slabel{margin-bottom:8px}
+  .kw-row{display:flex;gap:4px;margin-bottom:8px}
   .kw-row input{flex:1;background:var(--cream);border:1px solid var(--rule);padding:5px 7px;font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:var(--ink);outline:none}
   .kw-row input:focus{border-color:var(--blue)}
   .kw-row button{background:var(--ink);color:var(--paper);border:none;padding:5px 9px;font-size:0.78rem;cursor:pointer;transition:background .15s}
@@ -287,8 +287,8 @@ def get_html():
   .chips{display:flex;flex-wrap:wrap;gap:3px;min-height:16px}
   .chip{display:inline-flex;align-items:center;gap:4px;background:var(--ink);color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:0.61rem;padding:2px 6px 2px 8px;border-radius:2px;animation:pop .15s ease}
   @keyframes pop{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
-  .chip button{background:none;border:none;color:#aaa;cursor:pointer;font-size:.82rem;line-height:1;padding:0}
-  .chip button:hover{color:var(--accent)}
+  .chips .chip button{background:none;border:none;color:#aaa;cursor:pointer;font-size:.82rem;line-height:1;padding:0}
+  .chips .chip button:hover{color:var(--accent)}
   .no-kw{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:var(--muted);font-style:italic}
 
   /* sources */
@@ -360,12 +360,21 @@ def get_html():
     <div>
       <p class="slabel">Categories</p>
       <div class="cat-builder">
-        <input type="text" id="new-cat" placeholder="e.g. WATER, POWER…">
+        <input type="text" id="new-cat" placeholder="Type a category and press Enter or comma…">
         <button type="button" id="add-cat-btn">+ Add</button>
       </div>
-      <p class="hint">Each category = one blue section in the digest. Add keywords to match articles.</p>
+      <div id="cat-chips" class="cat-chips"></div>
+      <p class="hint">Digest will have one section per category, in the order listed above.</p>
     </div>
-    <div id="cat-list" class="cat-list"></div>
+    <div class="kw-section">
+      <p class="slabel">Keywords</p>
+      <div class="kw-row">
+        <input type="text" id="kw-inp" placeholder="Add keyword…">
+        <button type="button" id="kw-add-btn">+</button>
+      </div>
+      <div id="kw-chips" class="chips"></div>
+      <p class="hint" style="margin-top:6px">Articles matching these keywords appear under each category section.</p>
+    </div>
     <div>
       <p class="slabel">Sources</p>
       <div class="src-list" id="src-list"></div>
@@ -406,7 +415,6 @@ def get_html():
 
 <script>
 const SOURCES_LIST = [];
-let categories = [];
 let activeSources = new Set();
 let digestData = [];
 
@@ -428,67 +436,78 @@ fetch('/sources').then(r => r.json()).then(names => {
   });
 });
 
-// Categories
-document.getElementById('add-cat-btn').addEventListener('click', addCat);
-document.getElementById('new-cat').addEventListener('keydown', e => { if (e.key === 'Enter') addCat(); });
+// Categories: one field, multiple names as chips. Shared keywords for all.
+let categoryNames = [];
+let keywords = [];
 
-function addCat() {
+document.getElementById('add-cat-btn').addEventListener('click', addCatsFromInput);
+document.getElementById('new-cat').addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addCatsFromInput(); }
+});
+
+function addCatsFromInput() {
   const inp = document.getElementById('new-cat');
-  const name = inp.value.trim().toUpperCase();
-  if (!name || categories.find(c => c.name === name)) { inp.select(); return; }
-  categories.push({ id: 'c' + Date.now(), name, keywords: [] });
+  const raw = inp.value.trim();
+  if (!raw) return;
+  const parts = raw.split(/[,\n]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
+  parts.forEach(name => {
+    if (name && !categoryNames.includes(name)) categoryNames.push(name);
+  });
   inp.value = '';
-  renderCats();
+  renderCatChips();
 }
 
-function removeCat(id) { categories = categories.filter(c => c.id !== id); renderCats(); }
-function addKw(id, raw) {
-  const cat = categories.find(c => c.id === id);
-  if (!cat) return;
-  const kw = raw.trim().toLowerCase().replace(/,/g, '');
-  if (!kw || cat.keywords.includes(kw)) return;
-  cat.keywords.push(kw); renderCats();
-}
-function removeKw(id, kw) {
-  const cat = categories.find(c => c.id === id);
-  if (cat) { cat.keywords = cat.keywords.filter(k => k !== kw); renderCats(); }
+function removeCat(name) {
+  categoryNames = categoryNames.filter(n => n !== name);
+  renderCatChips();
 }
 
-function renderCats() {
-  const el = document.getElementById('cat-list');
-  el.innerHTML = '';
-  categories.forEach(cat => {
-    const card = document.createElement('div');
-    card.className = 'cat-card';
-    const chips = cat.keywords.length
-      ? cat.keywords.map(kw => `<span class="chip">${kw}<button data-id="${cat.id}" data-kw="${kw}">×</button></span>`).join('')
-      : `<span class="no-kw">No keywords yet</span>`;
-    card.innerHTML = `
-      <div class="cat-card-hdr">
-        <span class="cat-lbl">${cat.name}</span>
-        <button type="button" class="cat-rm" data-rm="${cat.id}">×</button>
-      </div>
-      <div class="kw-row">
-        <input type="text" placeholder="Add keyword…" data-inp="${cat.id}">
-        <button type="button" data-add="${cat.id}">+</button>
-      </div>
-      <div class="chips">${chips}</div>`;
-    el.appendChild(card);
+function renderCatChips() {
+  const el = document.getElementById('cat-chips');
+  el.innerHTML = categoryNames.map(name =>
+    `<span class="chip">${name}<button type="button" data-cat="${name}">×</button></span>`
+  ).join('');
+  el.querySelectorAll('.chip button').forEach(b => b.addEventListener('click', () => removeCat(b.dataset.cat)));
+}
 
-    card.querySelector(`[data-rm="${cat.id}"]`).addEventListener('click', () => removeCat(cat.id));
-    const kwInp = card.querySelector(`[data-inp="${cat.id}"]`);
-    card.querySelector(`[data-add="${cat.id}"]`).addEventListener('click', () => { addKw(cat.id, kwInp.value); kwInp.value = ''; });
-    kwInp.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addKw(cat.id, kwInp.value); kwInp.value = ''; } });
-    card.querySelectorAll('.chip button').forEach(b => b.addEventListener('click', () => removeKw(b.dataset.id, b.dataset.kw)));
+// Keywords (shared for all categories)
+document.getElementById('kw-add-btn').addEventListener('click', () => { addKw(); document.getElementById('kw-inp').value = ''; });
+document.getElementById('kw-inp').addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addKw(); document.getElementById('kw-inp').value = ''; }
+});
+
+function addKw() {
+  const inp = document.getElementById('kw-inp');
+  const kw = (inp.value || '').trim().toLowerCase().replace(/,/g, '');
+  if (!kw || keywords.includes(kw)) return;
+  keywords.push(kw);
+  renderKwChips();
+}
+
+function removeKw(kw) {
+  keywords = keywords.filter(k => k !== kw);
+  renderKwChips();
+}
+
+function renderKwChips() {
+  const el = document.getElementById('kw-chips');
+  el.innerHTML = keywords.length
+    ? keywords.map(kw => `<span class="chip">${kw}<button type="button" data-kw="${kw}">×</button></span>`).join('')
+    : '<span class="no-kw">No keywords yet</span>';
+  el.querySelectorAll('.chip button').forEach(b => {
+    if (b.dataset.kw) b.addEventListener('click', () => removeKw(b.dataset.kw));
   });
 }
+
+renderKwChips();
 
 // Search
 document.getElementById('run-btn').addEventListener('click', runSearch);
 
 async function runSearch() {
-  const catsWithKws = categories.filter(c => c.keywords.length);
-  if (!catsWithKws.length) { alert('Add at least one category with keywords.'); return; }
+  if (!categoryNames.length) { alert('Add at least one category.'); return; }
+  if (!keywords.length) { alert('Add at least one keyword.'); return; }
+  const catsWithKws = categoryNames.map(name => ({ name, keywords }));
 
   const runBtn = document.getElementById('run-btn');
   const statusBar = document.getElementById('status-bar');
