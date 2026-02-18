@@ -248,7 +248,7 @@ def get_html():
 <style>
   :root {
     --ink:#0f0f0f; --paper:#f5f0e8; --cream:#ede8de; --rule:#c8bfae;
-    --accent:#c1440e; --accent-dark:#8f3209; --muted:#7a7267; --blue:#0073C8;
+    --accent:#002D72; --accent-dark:#8f3209; --muted:#7a7267; --blue:#0073C8;
   }
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
@@ -352,7 +352,7 @@ def get_html():
         <button type="button" id="kw-add-btn">+ Add</button>
       </div>
       <div id="kw-chips" class="chips"></div>
-      <p class="hint" style="margin-top:6px">Results are grouped by keyword—one section per keyword, in the order listed.</p>
+      <p class="hint" style="margin-top:6px">Each keyword is searched separately (one section per keyword). The same article may appear under multiple keywords.</p>
     </div>
     <div>
       <p class="slabel">Sources</p>
@@ -458,7 +458,7 @@ document.getElementById('run-btn').addEventListener('click', runSearch);
 
 async function runSearch() {
   if (!keywords.length) { alert('Add at least one keyword.'); return; }
-  // Each keyword gets its own section: name = keyword (uppercase), keywords = [that keyword]
+  // One section per keyword; each keyword is searched separately (not combined). Same article may appear in multiple sections.
   const catsWithKws = keywords.map(kw => ({ name: kw.toUpperCase(), keywords: [kw] }));
 
   const runBtn = document.getElementById('run-btn');
