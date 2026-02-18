@@ -1,0 +1,1 @@
+# NewsHound uses Python standard library only — no packages required

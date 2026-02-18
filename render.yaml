@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: newshound
+    runtime: python
+    buildCommand: ""
+    startCommand: python3 newshound_server.py
+    envVars:
+      - key: PORT
+        generateValue: false
