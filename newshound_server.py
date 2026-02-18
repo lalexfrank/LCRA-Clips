@@ -242,7 +242,7 @@ def get_html():
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NewsHound</title>
+<title>LCRA Clips</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -264,30 +264,18 @@ def get_html():
   .slabel{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--rule);padding-bottom:4px;margin-bottom:7px}
   .hint{font-size:0.66rem;color:var(--muted);margin-top:4px;line-height:1.5}
 
-  /* category builder: one field, multiple categories as chips */
-  .cat-builder{display:flex;gap:5px}
-  .cat-builder input{flex:1;background:var(--paper);border:1px solid var(--rule);padding:7px 9px;font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:var(--ink);outline:none;text-transform:uppercase}
-  .cat-builder input::placeholder{text-transform:none}
-  .cat-builder input:focus{border-color:var(--blue)}
-  .cat-builder button{background:var(--blue);color:#fff;border:none;padding:7px 11px;font-family:'IBM Plex Mono',monospace;font-size:0.8rem;cursor:pointer;flex-shrink:0;transition:opacity .15s}
-  .cat-builder button:hover{opacity:.85}
-  .cat-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;min-height:24px}
-  .cat-chips .chip{display:inline-flex;align-items:center;gap:4px;background:var(--blue);color:#fff;font-family:'IBM Plex Mono',monospace;font-size:0.68rem;padding:3px 8px 3px 10px;border-radius:2px;animation:pop .15s ease}
-  .cat-chips .chip button{background:none;border:none;color:rgba(255,255,255,.8);cursor:pointer;font-size:.9rem;line-height:1;padding:0}
-  .cat-chips .chip button:hover{color:#fff}
-
-  /* single shared keywords section */
-  .kw-section{background:var(--paper);border:1px solid var(--rule);padding:11px 13px;margin-top:12px}
+  /* keywords: one field, each keyword = one digest section */
+  .kw-section{background:var(--paper);border:1px solid var(--rule);padding:11px 13px}
   .kw-section .slabel{margin-bottom:8px}
   .kw-row{display:flex;gap:4px;margin-bottom:8px}
-  .kw-row input{flex:1;background:var(--cream);border:1px solid var(--rule);padding:5px 7px;font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:var(--ink);outline:none}
+  .kw-row input{flex:1;background:var(--cream);border:1px solid var(--rule);padding:7px 9px;font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:var(--ink);outline:none}
   .kw-row input:focus{border-color:var(--blue)}
-  .kw-row button{background:var(--ink);color:var(--paper);border:none;padding:5px 9px;font-size:0.78rem;cursor:pointer;transition:background .15s}
-  .kw-row button:hover{background:var(--blue)}
-  .chips{display:flex;flex-wrap:wrap;gap:3px;min-height:16px}
-  .chip{display:inline-flex;align-items:center;gap:4px;background:var(--ink);color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:0.61rem;padding:2px 6px 2px 8px;border-radius:2px;animation:pop .15s ease}
+  .kw-row button{background:var(--blue);color:#fff;border:none;padding:7px 11px;font-family:'IBM Plex Mono',monospace;font-size:0.8rem;cursor:pointer;transition:opacity .15s}
+  .kw-row button:hover{opacity:.85}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;min-height:24px}
+  .chip{display:inline-flex;align-items:center;gap:4px;background:var(--ink);color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:0.68rem;padding:3px 8px 3px 10px;border-radius:2px;animation:pop .15s ease}
   @keyframes pop{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
-  .chips .chip button{background:none;border:none;color:#aaa;cursor:pointer;font-size:.82rem;line-height:1;padding:0}
+  .chips .chip button{background:none;border:none;color:#aaa;cursor:pointer;font-size:.9rem;line-height:1;padding:0}
   .chips .chip button:hover{color:var(--accent)}
   .no-kw{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:var(--muted);font-style:italic}
 
@@ -352,28 +340,19 @@ def get_html():
 </head>
 <body>
 <header>
-  <h1>News<span>Hound</span></h1>
-  <p class="tagline">Category Digest Builder</p>
+  <h1>LCRA <span>Clips</span></h1>
+  <p class="tagline">Keyword Digest Builder</p>
 </header>
 <div class="shell">
   <aside>
-    <div>
-      <p class="slabel">Categories</p>
-      <div class="cat-builder">
-        <input type="text" id="new-cat" placeholder="Type a category and press Enter or comma…">
-        <button type="button" id="add-cat-btn">+ Add</button>
-      </div>
-      <div id="cat-chips" class="cat-chips"></div>
-      <p class="hint">Digest will have one section per category, in the order listed above.</p>
-    </div>
     <div class="kw-section">
       <p class="slabel">Keywords</p>
       <div class="kw-row">
-        <input type="text" id="kw-inp" placeholder="Add keyword…">
-        <button type="button" id="kw-add-btn">+</button>
+        <input type="text" id="kw-inp" placeholder="Type a keyword and press Enter or comma…">
+        <button type="button" id="kw-add-btn">+ Add</button>
       </div>
       <div id="kw-chips" class="chips"></div>
-      <p class="hint" style="margin-top:6px">Articles matching these keywords appear under each category section.</p>
+      <p class="hint" style="margin-top:6px">Results are grouped by keyword—one section per keyword, in the order listed.</p>
     </div>
     <div>
       <p class="slabel">Sources</p>
@@ -403,9 +382,10 @@ def get_html():
   <main>
     <div class="empty" id="empty-state">
       <span class="big">⌕</span>
-      <p>Create categories like <strong>WATER</strong> or <strong>POWER</strong>,<br>
-      add keywords to each, pick sources,<br>then hit <strong>Search Articles</strong>.<br><br>
-      Use <strong>⬇ Download Digest</strong> to export<br>an LCRA-style HTML report.</p>
+      <p>Add keywords like <strong>water</strong> or <strong>power</strong>,<br>
+      pick sources, then hit <strong>Search Articles</strong>.<br><br>
+      Results appear in sections by keyword.<br>
+      Use <strong>⬇ Download Digest</strong> to export an HTML report.</p>
     </div>
     <div id="status-bar"><div class="spin"></div><span id="status-txt">Fetching feeds…</span></div>
     <div id="sum-bar"></div>
@@ -436,41 +416,9 @@ fetch('/sources').then(r => r.json()).then(names => {
   });
 });
 
-// Categories: one field, multiple names as chips. Shared keywords for all.
-let categoryNames = [];
+// Keywords: each keyword = one section in the digest (search term and section header)
 let keywords = [];
 
-document.getElementById('add-cat-btn').addEventListener('click', addCatsFromInput);
-document.getElementById('new-cat').addEventListener('keydown', e => {
-  if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addCatsFromInput(); }
-});
-
-function addCatsFromInput() {
-  const inp = document.getElementById('new-cat');
-  const raw = inp.value.trim();
-  if (!raw) return;
-  const parts = raw.split(/[,\n]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
-  parts.forEach(name => {
-    if (name && !categoryNames.includes(name)) categoryNames.push(name);
-  });
-  inp.value = '';
-  renderCatChips();
-}
-
-function removeCat(name) {
-  categoryNames = categoryNames.filter(n => n !== name);
-  renderCatChips();
-}
-
-function renderCatChips() {
-  const el = document.getElementById('cat-chips');
-  el.innerHTML = categoryNames.map(name =>
-    `<span class="chip">${name}<button type="button" data-cat="${name}">×</button></span>`
-  ).join('');
-  el.querySelectorAll('.chip button').forEach(b => b.addEventListener('click', () => removeCat(b.dataset.cat)));
-}
-
-// Keywords (shared for all categories)
 document.getElementById('kw-add-btn').addEventListener('click', () => { addKw(); document.getElementById('kw-inp').value = ''; });
 document.getElementById('kw-inp').addEventListener('keydown', e => {
   if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addKw(); document.getElementById('kw-inp').value = ''; }
@@ -478,9 +426,13 @@ document.getElementById('kw-inp').addEventListener('keydown', e => {
 
 function addKw() {
   const inp = document.getElementById('kw-inp');
-  const kw = (inp.value || '').trim().toLowerCase().replace(/,/g, '');
-  if (!kw || keywords.includes(kw)) return;
-  keywords.push(kw);
+  const raw = (inp.value || '').trim();
+  if (!raw) return;
+  const parts = raw.split(/[,\n]+/).map(s => s.trim().toLowerCase()).filter(Boolean);
+  parts.forEach(kw => {
+    if (kw && !keywords.includes(kw)) keywords.push(kw);
+  });
+  inp.value = '';
   renderKwChips();
 }
 
@@ -505,9 +457,9 @@ renderKwChips();
 document.getElementById('run-btn').addEventListener('click', runSearch);
 
 async function runSearch() {
-  if (!categoryNames.length) { alert('Add at least one category.'); return; }
   if (!keywords.length) { alert('Add at least one keyword.'); return; }
-  const catsWithKws = categoryNames.map(name => ({ name, keywords }));
+  // Each keyword gets its own section: name = keyword (uppercase), keywords = [that keyword]
+  const catsWithKws = keywords.map(kw => ({ name: kw.toUpperCase(), keywords: [kw] }));
 
   const runBtn = document.getElementById('run-btn');
   const statusBar = document.getElementById('status-bar');
@@ -571,7 +523,7 @@ async function runSearch() {
       resultsEl.appendChild(sec);
     }
 
-    sumBar.innerHTML = `<span><strong>${total}</strong> total matches</span><span><strong>${catsWithKws.length}</strong> categories</span><span><strong>${[...activeSources].length}</strong> sources</span>`;
+    sumBar.innerHTML = `<span><strong>${total}</strong> total matches</span><span><strong>${catsWithKws.length}</strong> keywords</span><span><strong>${[...activeSources].length}</strong> sources</span>`;
     sumBar.classList.add('show');
     if (total > 0) dlBtn.classList.add('show');
     if (total === 0) {
